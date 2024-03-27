@@ -172,7 +172,7 @@ macro(astcenc_set_properties ASTCENC_TARGET_NAME ASTCENC_VENEER_TYPE)
             $<${is_gnu_fe}:-Wall>
             $<${is_gnu_fe}:-Wextra>
             $<${is_gnu_fe}:-Wpedantic>
-            #$<${is_gnu_fe}:-Werror>
+            $<${is_gnu_fe}:-Werror>
             $<${is_gnu_fe}:-Wshadow>
             $<${is_gnu_fe}:-Wdouble-promotion>
             $<${is_clang}:-Wdocumentation>
