@@ -1188,11 +1188,6 @@ static int edit_astcenc_config(
 			argidx += 1;
 			config.rdo_enabled = true;
 		}
-		else if (!strcmp(argv[argidx], "-rdo-no-multithreading"))
-		{
-			argidx += 1;
-			config.rdo_no_multithreading = true;
-		}
 		else if (!strcmp(argv[argidx], "-rdo-quality"))
 		{
 			argidx += 2;
@@ -1358,7 +1353,6 @@ static void print_astcenc_config(
 		printf("    Rate-distortion opt:        %s\n", config.rdo_enabled ? "Enabled" : "Disabled");
 		if (config.rdo_enabled)
 		{
-			printf("    RDO multithreading:         %s\n", config.rdo_no_multithreading ? "Disabled" : "Enabled");
 			printf("    RDO quality:                %g\n", static_cast<double>(config.rdo_quality));
 			printf("    RDO lookback:               %u blocks\n", config.rdo_lookback);
 			printf("    RDO max error scale:        %g\n", static_cast<double>(config.rdo_max_smooth_block_error_scale));
