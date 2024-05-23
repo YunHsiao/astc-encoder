@@ -1217,7 +1217,7 @@ static int edit_astcenc_config(
 			argidx += 2;
 			if (argidx > argc)
 			{
-				print_error("ERROR: -rdo-dict-size switch with no argument\n");
+				print_error("ERROR: -rdo-lookback switch with no argument\n");
 				return 1;
 			}
 

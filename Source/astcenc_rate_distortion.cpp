@@ -38,23 +38,6 @@ static constexpr uint32_t ASTCENC_BYTES_PER_BLOCK = 16;
 
 template<typename T> T sqr(T v) { return v * v; }
 
-extern "C" void progress_emitter(float value);
-
-extern "C" void rdo_progress_emitter(
-	float value
-) {
-	static float previous_value = 100.0f;
-	if (previous_value == 100.0f)
-	{
-		printf("\n\n");
-		printf("Rate-distortion optimization\n");
-		printf("============================\n\n");
-	}
-	previous_value = value;
-
-	progress_emitter(value);
-}
-
 static uint32_t init_rdo_context(
 		astcenc_contexti& ctx,
 		const astcenc_image& image,
@@ -391,9 +374,15 @@ void rate_distortion_optimize(
 	// Only the first thread actually runs the initializer
 	ctxo.manage_rdo.init([&ctxo, &image, &swizzle]
 		{
+			if (ctxo.context.config.progress_callback)
+			{
+				printf("\n\n");
+				printf("Rate-distortion optimization\n");
+				printf("============================\n\n");
+			}
 			return init_rdo_context(ctxo.context, image, swizzle);
 		},
-		ctxo.context.config.progress_callback ? rdo_progress_emitter : nullptr);
+		ctxo.context.config.progress_callback);
 
 	const astcenc_contexti& ctx = ctxo.context;
 	uint32_t xblocks = (image.dim_x + ctx.bsd->xdim - 1u) / ctx.bsd->xdim;
@@ -422,7 +411,7 @@ void rate_distortion_optimize(
 		ert::reduce_entropy(buffer + base * ASTCENC_BYTES_PER_BLOCK, count,
 							ASTCENC_BYTES_PER_BLOCK, ASTCENC_BYTES_PER_BLOCK,
 							ctx.rdo_context->m_ert_params, total_modified,
-							compute_block_difference, &local_ctx);
+							&compute_block_difference, &local_ctx);
 
 		ctxo.manage_rdo.complete_task_assignment(count);
 	}
