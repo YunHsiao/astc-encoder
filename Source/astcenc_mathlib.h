@@ -56,7 +56,9 @@
 #endif
 
 #ifndef ASTCENC_AVX
-  #if defined(__AVX2__)
+  #if defined(__AVX512F__) && defined(__AVX512BW__)
+    #define ASTCENC_AVX 3
+  #elif defined(__AVX2__)
     #define ASTCENC_AVX 2
   #elif defined(__AVX__)
     #define ASTCENC_AVX 1
@@ -74,7 +76,9 @@
 #endif
 
 // Force vector-sized SIMD alignment
-#if ASTCENC_AVX
+#if ASTCENC_AVX >= 3
+  #define ASTCENC_VECALIGN 64
+#elif ASTCENC_AVX >= 2
   #define ASTCENC_VECALIGN 32
 #elif ASTCENC_SSE || ASTCENC_NEON
   #define ASTCENC_VECALIGN 16

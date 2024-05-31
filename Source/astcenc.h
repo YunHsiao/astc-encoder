@@ -712,13 +712,13 @@ struct astcenc_block_info
 	float color_endpoints[4][2][4];
 
 	/** @brief The per-texel interpolation weights for the block. */
-	float weight_values_plane1[216];
+	float weight_values_plane1[224];
 
 	/** @brief The per-texel interpolation weights for the block. */
-	float weight_values_plane2[216];
+	float weight_values_plane2[224];
 
 	/** @brief The per-texel partition assignments for the block. */
-	uint8_t partition_assignment[216];
+	uint8_t partition_assignment[224];
 };
 
 /**

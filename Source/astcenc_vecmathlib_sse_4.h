@@ -598,9 +598,8 @@ ASTCENC_SIMD_INLINE vint4 max(vint4 a, vint4 b)
  */
 ASTCENC_SIMD_INLINE vint4 hmin(vint4 a)
 {
-	a = min(a, vint4(_mm_shuffle_epi32(a.m, _MM_SHUFFLE(0, 0, 3, 2))));
-	a = min(a, vint4(_mm_shuffle_epi32(a.m, _MM_SHUFFLE(0, 0, 0, 1))));
-	return vint4(_mm_shuffle_epi32(a.m, _MM_SHUFFLE(0, 0, 0, 0)));
+	a = min(a, vint4(_mm_shuffle_epi32(a.m, _MM_SHUFFLE(2, 3, 0, 1))));
+	return min(a, vint4(_mm_shuffle_epi32(a.m, _MM_SHUFFLE(0, 1, 2, 3))));
 }
 
 /*
@@ -608,9 +607,8 @@ ASTCENC_SIMD_INLINE vint4 hmin(vint4 a)
  */
 ASTCENC_SIMD_INLINE vint4 hmax(vint4 a)
 {
-	a = max(a, vint4(_mm_shuffle_epi32(a.m, _MM_SHUFFLE(0, 0, 3, 2))));
-	a = max(a, vint4(_mm_shuffle_epi32(a.m, _MM_SHUFFLE(0, 0, 0, 1))));
-	return vint4(_mm_shuffle_epi32(a.m, _MM_SHUFFLE(0, 0, 0, 0)));
+	a = max(a, vint4(_mm_shuffle_epi32(a.m, _MM_SHUFFLE(2, 3, 0, 1))));
+	return max(a, vint4(_mm_shuffle_epi32(a.m, _MM_SHUFFLE(0, 1, 2, 3))));
 }
 
 /**
@@ -850,9 +848,8 @@ ASTCENC_SIMD_INLINE vfloat4 round(vfloat4 a)
  */
 ASTCENC_SIMD_INLINE vfloat4 hmin(vfloat4 a)
 {
-	a = min(a, vfloat4(_mm_shuffle_ps(a.m, a.m, _MM_SHUFFLE(0, 0, 3, 2))));
-	a = min(a, vfloat4(_mm_shuffle_ps(a.m, a.m, _MM_SHUFFLE(0, 0, 0, 1))));
-	return vfloat4(_mm_shuffle_ps(a.m, a.m, _MM_SHUFFLE(0, 0, 0, 0)));
+	a = min(a, vfloat4(_mm_shuffle_ps(a.m, a.m, _MM_SHUFFLE(2, 3, 0, 1))));
+	return min(a, vfloat4(_mm_shuffle_ps(a.m, a.m, _MM_SHUFFLE(0, 1, 2, 3))));
 }
 
 /**
@@ -860,9 +857,8 @@ ASTCENC_SIMD_INLINE vfloat4 hmin(vfloat4 a)
  */
 ASTCENC_SIMD_INLINE vfloat4 hmax(vfloat4 a)
 {
-	a = max(a, vfloat4(_mm_shuffle_ps(a.m, a.m, _MM_SHUFFLE(0, 0, 3, 2))));
-	a = max(a, vfloat4(_mm_shuffle_ps(a.m, a.m, _MM_SHUFFLE(0, 0, 0, 1))));
-	return vfloat4(_mm_shuffle_ps(a.m, a.m, _MM_SHUFFLE(0, 0, 0, 0)));
+	a = max(a, vfloat4(_mm_shuffle_ps(a.m, a.m, _MM_SHUFFLE(2, 3, 0, 1))));
+	return max(a, vfloat4(_mm_shuffle_ps(a.m, a.m, _MM_SHUFFLE(0, 1, 2, 3))));
 }
 
 /**

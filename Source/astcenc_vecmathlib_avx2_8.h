@@ -54,7 +54,7 @@ struct vfloat8
 	ASTCENC_SIMD_INLINE vfloat8() = default;
 
 	/**
-	 * @brief Construct from 4 values loaded from an unaligned address.
+	 * @brief Construct from 8 values loaded from an unaligned address.
 	 *
 	 * Consider using loada() which is better with vectors if data is aligned
 	 * to vector length.
@@ -519,13 +519,9 @@ ASTCENC_SIMD_INLINE vint8 max(vint8 a, vint8 b)
 ASTCENC_SIMD_INLINE vint8 hmin(vint8 a)
 {
 	__m128i m = _mm_min_epi32(_mm256_extracti128_si256(a.m, 0), _mm256_extracti128_si256(a.m, 1));
-	m = _mm_min_epi32(m, _mm_shuffle_epi32(m, _MM_SHUFFLE(0,0,3,2)));
-	m = _mm_min_epi32(m, _mm_shuffle_epi32(m, _MM_SHUFFLE(0,0,0,1)));
-	m = _mm_shuffle_epi32(m, _MM_SHUFFLE(0,0,0,0));
-
-	__m256i r = astcenc_mm256_set_m128i(m, m);
-	vint8 vmin(r);
-	return vmin;
+	m = _mm_min_epi32(m, _mm_shuffle_epi32(m, _MM_SHUFFLE(2, 3, 0, 1)));
+	m = _mm_min_epi32(m, _mm_shuffle_epi32(m, _MM_SHUFFLE(0, 1, 2, 3)));
+	return vint8(_mm_cvtsi128_si32(m));
 }
 
 /**
@@ -534,13 +530,9 @@ ASTCENC_SIMD_INLINE vint8 hmin(vint8 a)
 ASTCENC_SIMD_INLINE vint8 hmax(vint8 a)
 {
 	__m128i m = _mm_max_epi32(_mm256_extracti128_si256(a.m, 0), _mm256_extracti128_si256(a.m, 1));
-	m = _mm_max_epi32(m, _mm_shuffle_epi32(m, _MM_SHUFFLE(0,0,3,2)));
-	m = _mm_max_epi32(m, _mm_shuffle_epi32(m, _MM_SHUFFLE(0,0,0,1)));
-	m = _mm_shuffle_epi32(m, _MM_SHUFFLE(0,0,0,0));
-
-	__m256i r = astcenc_mm256_set_m128i(m, m);
-	vint8 vmax(r);
-	return vmax;
+	m = _mm_max_epi32(m, _mm_shuffle_epi32(m, _MM_SHUFFLE(2, 3, 0, 1)));
+	m = _mm_max_epi32(m, _mm_shuffle_epi32(m, _MM_SHUFFLE(0, 1, 2, 3)));
+	return vint8(_mm_cvtsi128_si32(m));
 }
 
 /**

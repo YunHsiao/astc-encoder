@@ -48,6 +48,9 @@ static bool g_cpu_has_sse41 { false };
 /** Does this CPU support AVX2? Set to -1 if not yet initialized. */
 static bool g_cpu_has_avx2 { false };
 
+/** Does this CPU support AVX512? Set to -1 if not yet initialized. */
+static bool g_cpu_has_avx512 { false };
+
 /** Does this CPU support POPCNT? Set to -1 if not yet initialized. */
 static bool g_cpu_has_popcnt { false };
 
@@ -88,6 +91,10 @@ static void detect_cpu_isa()
 		__cpuidex(data, 7, 0);
 		// AVX2 = Bank 7, EBX, bit 5
 		g_cpu_has_avx2 = data[1] & (1 << 5) ? true : false;
+		// AVX512F = Bank 7, EBX, bit 16
+		g_cpu_has_avx512 = data[1] & (1 << 16) ? true : false;
+		// AVX512BW = Bank 7, EBX, bit 30
+		g_cpu_has_avx512 &= data[1] & (1 << 30) ? true : false;
 	}
 
 	// Ensure state bits are updated before init flag is updated
@@ -123,6 +130,10 @@ static void detect_cpu_isa()
 	{
 		// AVX2 = Bank 7, EBX, bit 5
 		g_cpu_has_avx2 = data[1] & (1 << 5) ? true : false;
+		// AVX512F = Bank 7, EBX, bit 16
+		g_cpu_has_avx512 = data[1] & (1 << 16) ? true : false;
+		// AVX512BW = Bank 7, EBX, bit 30
+		g_cpu_has_avx512 &= data[1] & (1 << 30) ? true : false;
 	}
 
 	// Ensure state bits are updated before init flag is updated
@@ -182,6 +193,23 @@ static bool cpu_supports_sse41()
 }
 #endif
 
+#if ASTCENC_AVX >= 3
+/**
+ * @brief Run-time detection if the host CPU supports AVX 2 extension.
+ *
+ * @return @c true if supported, @c false if not.
+ */
+static bool cpu_supports_avx512()
+{
+	if (!g_init)
+	{
+		detect_cpu_isa();
+	}
+
+	return g_cpu_has_avx512;
+}
+#endif
+
 #if ASTCENC_AVX >= 2
 /**
  * @brief Run-time detection if the host CPU supports AVX 2 extension.
@@ -219,6 +247,14 @@ static inline void print_error(
  */
 static bool validate_cpu_isa()
 {
+	#if ASTCENC_AVX >= 3
+		if (!cpu_supports_avx512())
+		{
+			print_error("ERROR: Host does not support AVX512 ISA extension\n");
+			return false;
+		}
+	#endif
+
 	#if ASTCENC_AVX >= 2
 		if (!cpu_supports_avx2())
 		{

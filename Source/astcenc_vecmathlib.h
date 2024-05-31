@@ -69,7 +69,30 @@
 	#define ASTCENC_NO_INLINE __attribute__ ((noinline))
 #endif
 
-#if ASTCENC_AVX >= 2
+#if ASTCENC_AVX >= 3
+	/* If we have AVX512 expose 16-wide VLA. */
+	#include "astcenc_vecmathlib_sse_4.h"
+	#include "astcenc_vecmathlib_common_4.h"
+	#include "astcenc_vecmathlib_avx2_8.h"
+	#include "astcenc_vecmathlib_avx512_16.h"
+
+	#define ASTCENC_SIMD_WIDTH 16
+
+	using vfloat = vfloat16;
+
+	#if defined(ASTCENC_NO_INVARIANCE)
+		using vfloatacc = vfloat16;
+	#else
+		using vfloatacc = vfloat4;
+	#endif
+
+	using vint = vint16;
+	using vmask = vmask16;
+
+	constexpr auto loada = vfloat16::loada;
+	constexpr auto load1 = vfloat16::load1;
+
+#elif ASTCENC_AVX >= 2
 	/* If we have AVX2 expose 8-wide VLA. */
 	#include "astcenc_vecmathlib_sse_4.h"
 	#include "astcenc_vecmathlib_common_4.h"

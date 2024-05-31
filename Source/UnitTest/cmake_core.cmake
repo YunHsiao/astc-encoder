@@ -126,6 +126,20 @@ elseif(${ASTCENC_ISA_SIMD} MATCHES "avx2")
             $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-mavx2 -mpopcnt -mf16c>
             $<$<CXX_COMPILER_ID:MSVC>:/arch:AVX2>)
 
+elseif(${ASTCENC_ISA_SIMD} MATCHES "avx512")
+    target_compile_definitions(${ASTCENC_TEST}
+        PRIVATE
+            ASTCENC_NEON=0
+            ASTCENC_SSE=41
+            ASTCENC_AVX=3
+            ASTCENC_POPCNT=1
+            ASTCENC_F16C=1)
+
+    target_compile_options(${ASTCENC_TEST}
+        PRIVATE
+            $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-march=x86-64-v4 -mpopcnt -mf16c>
+            $<$<CXX_COMPILER_ID:MSVC>:/arch:AVX512>)
+
 endif()
 
 target_link_libraries(${ASTCENC_TEST}

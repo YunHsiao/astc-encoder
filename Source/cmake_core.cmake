@@ -16,6 +16,7 @@
 #  ----------------------------------------------------------------------------
 
 set(ASTCENC_TARGET astc${ASTCENC_CODEC}-${ASTCENC_ISA_SIMD})
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 project(${ASTCENC_TARGET})
 
@@ -358,6 +359,43 @@ macro(astcenc_set_properties ASTCENC_TARGET_NAME ASTCENC_IS_VENEER)
                     $<${is_msvc_fe}:/arch:AVX2>
                     $<${is_clangcl}:-mavx2 -mpopcnt -mf16c>
                     $<${is_gnu_fe}:-mavx2 -mpopcnt -mf16c>
+                    $<${is_gnu_fe}:-Wno-unused-command-line-argument>)
+        endif()
+
+        # Non-invariant builds enable us to loosen the compiler constraints on
+        # floating point, but this is only worth doing on CPUs with AVX2 because
+        # this implies we can also enable the FMA instruction set extensions
+        # which significantly improve performance. Note that this DOES reduce
+        # image quality by up to 0.2 dB (normally much less), but buys an
+        # average of 10-15% performance improvement ...
+        if((NOT ${ASTCENC_INVARIANCE}) AND (NOT ${ASTCENC_IS_VENEER}))
+            target_compile_options(${ASTCENC_TARGET_NAME}
+                PRIVATE
+                    $<${is_gnu_fe}:-mfma>)
+        endif()
+
+    elseif(${ASTCENC_ISA_SIMD} MATCHES "avx512")
+        target_compile_definitions(${ASTCENC_TARGET_NAME}
+            PRIVATE
+                ASTCENC_NEON=0
+                ASTCENC_SSE=41
+                ASTCENC_AVX=3
+                ASTCENC_POPCNT=1
+                ASTCENC_F16C=1)
+
+        if (${ASTCENC_IS_VENEER})
+            # Force SSE2 on AppleClang (normally SSE4.1 is the default)
+            target_compile_options(${ASTCENC_TARGET_NAME}
+                PRIVATE
+                    $<${is_gnu_fe}:-msse2>
+                    $<${is_gnu_fe}:-mno-sse4.1>
+                    $<${is_gnu_fe}:-Wno-unused-command-line-argument>)
+        else()
+            target_compile_options(${ASTCENC_TARGET_NAME}
+                PRIVATE
+                    $<${is_msvc_fe}:/arch:AVX512>
+                    $<${is_clangcl}:-march=x86-64-v4>
+                    $<${is_gnu_fe}:-march=x86-64-v4>
                     $<${is_gnu_fe}:-Wno-unused-command-line-argument>)
         endif()
 
