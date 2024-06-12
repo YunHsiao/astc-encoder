@@ -195,6 +195,8 @@ static float compute_symbolic_block_difference_constant(
 		symbolic_compressed_block scb,
 		const image_block& blk
 ) {
+	if (!is_color_valid(vint4(scb.constant_color))) return -ERROR_CALC_DEFAULT;
+
 	vfloat4 color(0.0f);
 
 	// UNORM16 constant color block
@@ -296,15 +298,23 @@ static float compute_block_mse(
 
 	for (uint32_t i = 0; i < texel_count; i += ASTCENC_SIMD_WIDTH, lane_id += vint(ASTCENC_SIMD_WIDTH))
 	{
-		vfloat color_orig_r = loada(orig.data_r + i) * orig_scale;
-		vfloat color_orig_g = loada(orig.data_g + i) * orig_scale;
-		vfloat color_orig_b = loada(orig.data_b + i) * orig_scale;
-		vfloat color_orig_a = loada(orig.data_a + i) * orig_scale;
-
 		vfloat color_cmp_r = loada(cmp.data_r + i) * cmp_scale;
 		vfloat color_cmp_g = loada(cmp.data_g + i) * cmp_scale;
 		vfloat color_cmp_b = loada(cmp.data_b + i) * cmp_scale;
 		vfloat color_cmp_a = loada(cmp.data_a + i) * cmp_scale;
+
+		if (any(color_cmp_r > vfloat(255.0f) | color_cmp_r < vfloat::zero()) ||
+			any(color_cmp_g > vfloat(255.0f) | color_cmp_g < vfloat::zero()) ||
+			any(color_cmp_b > vfloat(255.0f) | color_cmp_b < vfloat::zero()) ||
+			any(color_cmp_a > vfloat(255.0f) | color_cmp_a < vfloat::zero()))
+		{
+			return -ERROR_CALC_DEFAULT;
+		}
+
+		vfloat color_orig_r = loada(orig.data_r + i) * orig_scale;
+		vfloat color_orig_g = loada(orig.data_g + i) * orig_scale;
+		vfloat color_orig_b = loada(orig.data_b + i) * orig_scale;
+		vfloat color_orig_a = loada(orig.data_a + i) * orig_scale;
 
 		vfloat color_error_r = min(abs(color_orig_r - color_cmp_r), vfloat(1e15f));
 		vfloat color_error_g = min(abs(color_orig_g - color_cmp_g), vfloat(1e15f));
@@ -341,27 +351,6 @@ struct local_rdo_context
 	uint32_t base_offset;
 };
 
-static bool is_transparent(int v) { return (v & 0xFF) != 0xFF; }
-
-static bool has_any_transparency(
-	astcenc_profile decode_mode,
-	const symbolic_compressed_block& scb
-) {
-	if (scb.block_type != SYM_BTYPE_NONCONST) return is_transparent(scb.constant_color[3]);
-
-	vint4 ep0;
-	vint4 ep1;
-	bool rgb_lns;
-	bool a_lns;
-
-	for (int i = 0; i < scb.partition_count; i++)
-	{
-		unpack_color_endpoints(decode_mode, scb.color_formats[i], scb.color_values[i], rgb_lns, a_lns, ep0, ep1);
-		if (is_transparent(ep0.lane<3>()) || is_transparent(ep1.lane<3>())) return true;
-	}
-	return false;
-}
-
 static float compute_block_difference(
 	void* user_data,
 	const uint8_t* pcb,
@@ -378,7 +367,6 @@ static float compute_block_difference(
 	if (scb.block_type == SYM_BTYPE_ERROR) return -ERROR_CALC_DEFAULT;
 	bool is_dual_plane = scb.block_type == SYM_BTYPE_NONCONST && ctx.bsd->get_block_mode(scb.block_mode).is_dual_plane;
 	if (is_dual_plane && scb.partition_count != 1) return -ERROR_CALC_DEFAULT;
-	if (ctx.config.cw_a_weight < 0.01f && has_any_transparency(ctx.config.profile, scb)) return -ERROR_CALC_DEFAULT;
 
 	const astcenc_rdo_context& rdo_ctx = *ctx.rdo_context;
 	uint32_t block_idx = local_block_idx + local_ctx.base_offset;

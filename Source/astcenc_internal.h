@@ -2187,6 +2187,11 @@ void rate_distortion_optimize(
 	const astcenc_swizzle& swizzle,
 	uint8_t* buffer);
 
+static inline bool is_color_valid(vint4 c)
+{
+	return all(asr<16>(c) == vint4::zero());
+}
+
 /* ============================================================================
 Platform-specific functions.
 ============================================================================ */

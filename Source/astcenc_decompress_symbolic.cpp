@@ -361,6 +361,7 @@ float compute_symbolic_block_difference_2plane(
 	                       scb.color_values[0],
 	                       rgb_lns, a_lns,
 	                       ep0, ep1);
+	if (!is_color_valid(ep0) || !is_color_valid(ep1)) return -ERROR_CALC_DEFAULT;
 
 	vmask4 u8_mask = get_u8_component_mask(config.profile, blk);
 
@@ -368,6 +369,7 @@ float compute_symbolic_block_difference_2plane(
 	unsigned int texel_count = bsd.texel_count;
 	for (unsigned int i = 0; i < texel_count; i++)
 	{
+		if (plane1_weights[i] > 64 || plane2_weights[i] > 64) return -ERROR_CALC_DEFAULT;
 		vint4 weight = select(vint4(plane1_weights[i]), vint4(plane2_weights[i]), plane2_mask);
 		vint4 colori = lerp_color_int(u8_mask, ep0, ep1, weight);
 
@@ -459,12 +461,14 @@ float compute_symbolic_block_difference_1plane(
 		                       scb.color_values[i],
 		                       rgb_lns, a_lns,
 		                       ep0, ep1);
+		if (!is_color_valid(ep0) || !is_color_valid(ep1)) return -ERROR_CALC_DEFAULT;
 
 		// Unpack and compute error for each texel in the partition
 		unsigned int texel_count = pi.partition_texel_count[i];
 		for (unsigned int j = 0; j < texel_count; j++)
 		{
 			unsigned int tix = pi.texels_of_partition[i][j];
+			if (plane1_weights[tix] > 64) return -ERROR_CALC_DEFAULT;
 			vint4 colori = lerp_color_int(u8_mask, ep0, ep1,
 			                              vint4(plane1_weights[tix]));
 
@@ -547,6 +551,7 @@ float compute_symbolic_block_difference_1plane_1partition(
 	                       scb.color_values[0],
 	                       rgb_lns, a_lns,
 	                       ep0, ep1);
+	if (!is_color_valid(ep0) || !is_color_valid(ep1)) return -ERROR_CALC_DEFAULT;
 
 	vmask4 u8_mask = get_u8_component_mask(config.profile, blk);
 
@@ -560,6 +565,7 @@ float compute_symbolic_block_difference_1plane_1partition(
 	{
 		// Compute EP1 contribution
 		vint weight1 = vint::loada(plane1_weights + i);
+		if (any(weight1 > vint(64))) return -ERROR_CALC_DEFAULT;
 		vint ep1_r = vint(ep1.lane<0>()) * weight1;
 		vint ep1_g = vint(ep1.lane<1>()) * weight1;
 		vint ep1_b = vint(ep1.lane<2>()) * weight1;
