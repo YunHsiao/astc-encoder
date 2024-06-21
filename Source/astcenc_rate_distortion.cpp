@@ -351,6 +351,38 @@ struct local_rdo_context
 	uint32_t base_offset;
 };
 
+static bool encoding_matches_color_formats(
+	astcenc_profile decode_mode,
+	const symbolic_compressed_block& scb
+) {
+	static bool is_hdr_format[]
+	{
+		false, // FMT_LUMINANCE
+		false, // FMT_LUMINANCE_DELTA
+		true,  // FMT_HDR_LUMINANCE_LARGE_RANGE
+		true,  // FMT_HDR_LUMINANCE_SMALL_RANGE
+		false, // FMT_LUMINANCE_ALPHA
+		false, // FMT_LUMINANCE_ALPHA_DELTA
+		false, // FMT_RGB_SCALE
+		true,  // FMT_HDR_RGB_SCALE
+		false, // FMT_RGB
+		false, // FMT_RGB_DELTA
+		false, // FMT_RGB_SCALE_ALPHA
+		true,  // FMT_HDR_RGB
+		false, // FMT_RGBA
+		false, // FMT_RGBA_DELTA
+		true,  // FMT_HDR_RGB_LDR_ALPHA
+		true,  // FMT_HDR_RGBA
+	};
+
+	bool is_hdr_encoding = decode_mode > ASTCENC_PRF_LDR;
+	for (int i = 0; i < scb.partition_count; ++i)
+	{
+		if (is_hdr_format[scb.color_formats[i]] && !is_hdr_encoding) return false;
+	}
+	return true;
+}
+
 static float compute_block_difference(
 	void* user_data,
 	const uint8_t* pcb,
@@ -367,6 +399,7 @@ static float compute_block_difference(
 	if (scb.block_type == SYM_BTYPE_ERROR) return -ERROR_CALC_DEFAULT;
 	bool is_dual_plane = scb.block_type == SYM_BTYPE_NONCONST && ctx.bsd->get_block_mode(scb.block_mode).is_dual_plane;
 	if (is_dual_plane && scb.partition_count != 1) return -ERROR_CALC_DEFAULT;
+	if (!encoding_matches_color_formats(ctx.config.profile, scb)) return -ERROR_CALC_DEFAULT;
 
 	const astcenc_rdo_context& rdo_ctx = *ctx.rdo_context;
 	uint32_t block_idx = local_block_idx + local_ctx.base_offset;
